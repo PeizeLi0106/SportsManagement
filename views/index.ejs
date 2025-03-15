@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>学员管理系统</title>
+  <!-- Bootstrap CSS -->
+  <!-- Bootstrap CSS (Already Included) -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+
+<!-- Bootstrap JS & Popper.js (Make Sure These Are Included) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    body {
+      padding-top: 70px;
+    }
+    .main-content {
+      display: flex;
+      height: calc(100vh - 70px);
+    }
+    .text-box, .blank-div {
+      flex: 1;
+      padding: 20px;
+    }
+    .text-box form {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .text-box textarea {
+      flex: 1;
+      resize: none;
+      margin-bottom: 1rem;
+    }
+    .submit-btn {
+      flex: 0;
+      align-self: flex-end;
+    }
+    .coach-btn {
+      margin: 5px;
+      cursor: pointer;
+    }
+    .coach-btn.selected {
+      background-color: #28a745 !important; /* Green when selected */
+      color: white !important;
+    }
+    .finish-btn {
+      display: block;
+      margin-top: 20px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <a class="navbar-brand" href="#">🏸学员管理</a>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <div class="navbar-nav">
+        <button type="button" class="btn btn-warning mr-2">更新学员</button>
+        <button type="button" class="btn btn-success" id="addStudentBtn" data-toggle="modal" data-target="#addStudentModal">加学员</button>
+      </div>
+    </div>
+  </nav>
+  
+
+
+  <!-- Main Content -->
+  <div class="container-fluid main-content">
+    <!-- Left Div: Large Text Box with Form -->
+    <div class="text-box">
+      <form action="/submit" method="POST">
+        <textarea class="form-control" name="userText" placeholder="复制粘贴微信群聊接龙..."></textarea>
+        <button type="submit" class="btn btn-primary submit-btn">Submit</button>
+      </form>
+    </div>
+
+    <!-- Right Div: Display Extracted Names -->
+    <div class="blank-div">
+      <% if (matchedStudentsToCoaches && Object.keys(matchedStudentsToCoaches).length > 0) { %>
+        <h4>学生与教练列表 (学生 -> 教练)</h4>
+        <form id="selectionForm" action="/finish-selection" method="POST">
+          <% Object.keys(matchedStudentsToCoaches).forEach(student => { %>
+            <div>
+              <strong><%= student %>:</strong>
+              <% matchedStudentsToCoaches[student].forEach(coach => { %>
+                <button type="button" class="btn btn-outline-primary coach-btn" 
+                        data-student="<%= student %>" 
+                        data-coach="<%= coach %>">
+                  <%= coach %>
+                </button>
+              <% }) %>
+            </div>
+          <% }) %>
+
+          <!-- Hidden input field to store selected coaches before submission -->
+          <input type="hidden" name="selectedCoaches" id="selectedCoaches" />
+          
+          <!-- Finish Button -->
+          <button type="submit" class="btn btn-success finish-btn" id="finishBtn" disabled>生成上课名单</button>
+        </form>
+      <% } else { %>
+        <p>暂无数据 (No data available).</p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS and dependencies -->
+  <script>
+    $(document).ready(function () {
+      let selectedData = {}; 
+  
+      const matchedStudentsToCoaches = <%- JSON.stringify(matchedStudentsToCoaches) %>;
+  
+      $(".coach-btn").click(function () {
+        let student = $(this).data("student");
+        let coach = $(this).data("coach");
+  
+        if (!selectedData[student]) {
+          selectedData[student] = [];
+        }
+  
+        if (selectedData[student].includes(coach)) {
+          selectedData[student] = selectedData[student].filter(c => c !== coach);
+          $(this).removeClass("selected btn-success").addClass("btn-outline-primary");
+        } else {
+          selectedData[student].push(coach);
+          $(this).addClass("selected btn-success").removeClass("btn-outline-primary");
+        }
+  
+        validateSelection();
+      });
+  
+      function validateSelection() {
+        let allStudentsSelected = Object.keys(matchedStudentsToCoaches).every(student =>
+          selectedData[student] && selectedData[student].length > 0
+        );
+  
+        $("#finishBtn").prop("disabled", !allStudentsSelected);
+      }
+  
+      $("#selectionForm").submit(function (event) {
+        event.preventDefault(); // Prevent normal form submission
+  
+        if ($("#finishBtn").prop("disabled")) {
+          alert("请确保每个学生都选择至少一个教练!");
+          return;
+        }
+  
+        let formData = JSON.stringify({ selectedCoaches: selectedData });
+  
+        // Automatically download Excel using fetch
+        fetch("/finish-selection", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: formData
+        })
+        .then(response => response.blob())
+        .then(blob => {
+          let link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "coaches.xlsx"; // Excel filename
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          alert("发生错误，请重试!");
+        });
+      });
+    });
+    
+  </script>
+  
+  
+</body>
+</html>
+

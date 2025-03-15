@@ -1,0 +1,33 @@
+{
+  "name": "sportsmanagement",
+  "version": "1.0.0",
+  "description": "A web app designated for a badminton coach to better manage the assignment of coaches and students",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PeizeLi0106/SportsManagement.git"
+  },
+  "author": "Peize Li",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PeizeLi0106/SportsManagement/issues"
+  },
+  "homepage": "https://github.com/PeizeLi0106/SportsManagement#readme",
+  "dependencies": {
+    "axios": "^1.8.3",
+    "body-parser": "^1.20.3",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "openai": "^4.87.3",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
