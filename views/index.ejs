@@ -5,14 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>学员管理系统</title>
   <!-- Bootstrap CSS -->
-  <!-- Bootstrap CSS (Already Included) -->
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
-
-<!-- Bootstrap JS & Popper.js (Make Sure These Are Included) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <!-- Bootstrap JS & Popper.js -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   
   <style>
     html, body {
@@ -50,7 +47,7 @@
       cursor: pointer;
     }
     .coach-btn.selected {
-      background-color: #28a745 !important; /* Green when selected */
+      background-color: #28a745 !important;
       color: white !important;
     }
     .finish-btn {
@@ -63,27 +60,35 @@
 <body>
   <!-- Navigation Bar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-    <a class="navbar-brand" href="#">🏸学员管理</a>
-    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-      <div class="navbar-nav">
-        <button type="button" class="btn btn-warning mr-2">更新学员</button>
-        <button type="button" class="btn btn-success" id="addStudentBtn" data-toggle="modal" data-target="#addStudentModal">加学员</button>
+    <div class="container-fluid">
+      <!-- Left side: Download Coach List Button and Coach Management Buttons -->
+      <div class="d-flex align-items-center">
+        <!-- Replace nav-brand with a button -->
+        <button type="button" class="btn btn-info mr-2" id="downloadCoachList">下载教练名单</button>
+        <button type="button" class="btn btn-success mr-2" id="addCoachBtn" data-toggle="modal" data-target="#addCoachModal">添加教练</button>
+        <button type="button" class="btn btn-danger mr-2" id="deleteCoachBtn" data-toggle="modal" data-target="#deleteCoachModal">删除教练</button>
+      </div>
+      <!-- Right side: Student Buttons -->
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <div class="navbar-nav">
+          <button type="button" class="btn btn-info mr-2" id="downloadStudentList">下载学员名单</button>
+          <button type="button" class="btn btn-primary mr-2" id="addStudentBtn" data-toggle="modal" data-target="#addStudentModal">添加学员</button>
+          <button type="button" class="btn btn-warning mr-2" id="updateStudentBtn" data-toggle="modal" data-target="#updateStudentModal">更新学员</button>
+          <button type="button" class="btn btn-danger mr-2" id="deleteStudentBtn" data-toggle="modal" data-target="#deleteStudentModal">删除学员</button>
+        </div>
       </div>
     </div>
   </nav>
   
-
-
   <!-- Main Content -->
   <div class="container-fluid main-content">
     <!-- Left Div: Large Text Box with Form -->
     <div class="text-box">
       <form action="/submit" method="POST">
         <textarea class="form-control" name="userText" placeholder="复制粘贴微信群聊接龙..."></textarea>
-        <button type="submit" class="btn btn-primary submit-btn">Submit</button>
+        <button type="submit" class="btn btn-primary submit-btn">上传</button>
       </form>
     </div>
-
     <!-- Right Div: Display Extracted Names -->
     <div class="blank-div">
       <% if (matchedStudentsToCoaches && Object.keys(matchedStudentsToCoaches).length > 0) { %>
@@ -101,24 +106,164 @@
               <% }) %>
             </div>
           <% }) %>
-
           <!-- Hidden input field to store selected coaches before submission -->
           <input type="hidden" name="selectedCoaches" id="selectedCoaches" />
-          
           <!-- Finish Button -->
           <button type="submit" class="btn btn-success finish-btn" id="finishBtn" disabled>生成上课名单</button>
         </form>
       <% } else { %>
-        <p>暂无数据 (No data available).</p>
+        <p>暂无数据</p>
       <% } %>
     </div>
   </div>
 
-  <!-- Bootstrap JS and dependencies -->
+  <!-- Add Student Modal -->
+<div class="modal fade" id="addStudentModal" tabindex="-1" role="dialog" aria-labelledby="addStudentModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form action="/add-student" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addStudentModalLabel">添加学员</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="关闭">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="studentName">学生姓名</label>
+            <input type="text" class="form-control" id="studentName" name="studentName" placeholder="输入学生姓名" required>
+          </div>
+          <div class="form-group">
+            <label>选择教练</label>
+            <div class="coachOptionsContainer">
+              <!-- Coaches will be dynamically inserted here -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-primary">提交</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Update Student Modal (Same design as Add Student Modal) -->
+  <div class="modal fade" id="updateStudentModal" tabindex="-1" role="dialog" aria-labelledby="updateStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form action="/update-student" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="updateStudentModalLabel">更新学员</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="关闭">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="updateStudentName">学生姓名</label>
+              <input type="text" class="form-control" id="updateStudentName" name="studentName" placeholder="输入学生姓名" required>
+            </div>
+            <div class="form-group">
+              <label>选择教练</label>
+              <div class="coachOptionsContainer">
+                <!-- Coaches will be dynamically inserted here -->
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+            <button type="submit" class="btn btn-primary">更新</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Student Modal (Only asks for the student name) -->
+  <div class="modal fade" id="deleteStudentModal" tabindex="-1" role="dialog" aria-labelledby="deleteStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form action="/delete-student" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteStudentModalLabel">删除学员</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="关闭">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="deleteStudentName">学生姓名</label>
+              <input type="text" class="form-control" id="deleteStudentName" name="studentName" placeholder="输入学生姓名" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+            <button type="submit" class="btn btn-danger">删除</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Coach Modal -->
+  <div class="modal fade" id="addCoachModal" tabindex="-1" role="dialog" aria-labelledby="addCoachModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form action="/add-coach" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addCoachModalLabel">添加教练</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="关闭">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="coachName">教练姓名</label>
+              <input type="text" class="form-control" id="coachName" name="coachName" placeholder="输入教练姓名" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+            <button type="submit" class="btn btn-primary">提交</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Coach Modal -->
+  <div class="modal fade" id="deleteCoachModal" tabindex="-1" role="dialog" aria-labelledby="deleteCoachModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form action="/delete-coach" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteCoachModalLabel">删除教练</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="关闭">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="deleteCoachName">教练姓名</label>
+              <input type="text" class="form-control" id="deleteCoachName" name="coachName" placeholder="输入教练姓名" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+            <button type="submit" class="btn btn-danger">删除</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Existing Script for Other Functionality -->
   <script>
     $(document).ready(function () {
       let selectedData = {}; 
-  
       const matchedStudentsToCoaches = <%- JSON.stringify(matchedStudentsToCoaches) %>;
   
       $(".coach-btn").click(function () {
@@ -170,7 +315,7 @@
         .then(blob => {
           let link = document.createElement("a");
           link.href = URL.createObjectURL(blob);
-          link.download = "coaches.xlsx"; // Excel filename
+          link.download = "上课名单.xlsx"; // Excel filename
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -180,11 +325,69 @@
           alert("发生错误，请重试!");
         });
       });
+
+      function loadCoaches() {
+      $.get("/get-coaches", function (coaches) {
+        let coachOptionsContainer = $(".coachOptionsContainer");
+        coachOptionsContainer.empty(); // Clear existing options
+
+        coaches.forEach(coach => {
+          let coachLabel = `
+            <label class="btn btn-outline-primary mr-2">
+              <input type="checkbox" name="coachOptions[]" value="${coach}" autocomplete="off"> ${coach}
+            </label>`;
+          coachOptionsContainer.append(coachLabel);
+        });
+      }).fail(function () {
+        alert("无法加载教练名单，请重试！");
+      });
+    }
+      // When the "Add Student" button is clicked, fetch the latest coach list
+      $("#addStudentBtn").click(function () {
+        loadCoaches();
+      });
+      $("#updateStudentBtn").click(function () {
+        loadCoaches();
+      });
+
+      // Download Coach List Button click handler
+      $("#downloadCoachList").click(function(){
+        fetch("/download-coaches")
+          .then(response => response.blob())
+          .then(blob => {
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "教练名单.xlsx"; // Excel filename
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          })
+          .catch(error => {
+            console.error("下载错误:", error);
+            alert("下载失败，请重试！");
+          });
+      });
+        // Download Student List Button click handler
+    $("#downloadStudentList").click(function(){
+      fetch("/download-students")
+        .then(response => response.blob())
+        .then(blob => {
+          let link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "学员名单.xlsx"; // Excel filename for student list
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        })
+        .catch(error => {
+          console.error("下载错误:", error);
+          alert("下载失败，请重试！");
+        });
+      });
     });
-    
   </script>
-  
-  
 </body>
 </html>
+
+
 
