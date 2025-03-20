@@ -15,11 +15,8 @@ const app = express();
 const port = process.env.PORT;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const studentFilePath = path.join(__dirname, "public", "student.csv");
-const coachFilePath = path.join(__dirname, 'public', 'coach.csv');
-
-
-
+const studentFilePath = path.join(__dirname, 'public', 'student.csv');
+const coachFilePath   = path.join(__dirname, 'public', 'coach.csv');
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
